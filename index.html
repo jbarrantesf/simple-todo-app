@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Todo App</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233682F7'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E">
+    <style>
+        :root {
+            /* Color Palette */
+            --primary-color: #3682F7;         /* Blue */
+            --secondary-color: #A0C4FF;       /* Light Blue */
+            --accent-color: #FF6B6B;          /* Red */
+            --success-color: #5cb85c;         /* Green */
+            --text-color: #333;
+            --background-color: #f0f2f5;
+            --surface-color: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+
+            /* Typography */
+            --font-family-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-size-base: 1rem;
+            --font-size-large: 1.5rem;
+            --font-size-small: 0.875rem;
+
+            /* Spacing */
+            --spacing-unit: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+
+            /* Border Radius */
+            --border-radius-sm: 0.25rem;
+            --border-radius-md: 0.5rem;
+            --border-radius-lg: 1rem;
+
+            /* Transitions */
+            --transition-speed: 0.2s ease-in-out;
+        }
+
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #64B5F6;
+                --secondary-color: #BBDEFB;
+                --accent-color: #FF8A80;
+                --success-color: #66BB6A;
+                --text-color: #e0e0e0;
+                --background-color: #1a1a2e; /* Darker blue-purple */
+                --surface-color: #2e3a4e;    /* Slightly lighter than background */
+                --border-color: #4a5568;
+                --shadow-color: rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* Base styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-family-sans);
+            font-size: var(--font-size-base);
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: flex-start;
+            align-items: center;
+            padding: var(--spacing-xl) var(--spacing-md);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        /* Skip Link for Accessibility */
+        .skip-link {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-unit);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            text-decoration: none;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .skip-link:focus {
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            opacity: 1;
+            pointer-events: auto;
+            clip: auto;
+            height: auto;
+            width: auto;
+        }
+
+        /* Main Container */
+        .todo-app-container {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 var(--spacing-unit) var(--spacing-lg) var(--shadow-color);
+            width: 100%;
+            max-width: 500px;
+            padding: var(--spacing-lg);
+            margin-top: var(--spacing-xl);
+            transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        /* Header */
+        h1 {
+            font-size: var(--font-size-large);
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-unit);
+        }
+
+        h1 svg {
+            width: var(--font-size-large);
+            height: var(--font-size-large);
+            fill: var(--primary-color);
+        }
+
+        /* Todo Input Section */
+        .input-section {
+            display: flex;
+            gap: var(--spacing-unit);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .input-section input[type="text"] {
+            flex-grow: 1;
+            padding: var(--spacing-unit) var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            font-size: var(--font-size-base);
+            outline: none;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+            background-color: var(--background-color); /* Matches body background for "floating" effect */
+            color: var(--text-color);
+        }
+
+        .input-section input[type="text"]::placeholder {
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        .input-section input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--secondary-color);
+        }
+
+        .input-section button {
+            padding: var(--spacing-unit) var(--spacing-md);
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            font-size: var(--font-size-base);
+            transition: background-color var(--transition-speed), transform var(--transition-speed);
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
+        .input-section button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .input-section button:active {
+            transform: translateY(0);
+        }
+
+        .input-section button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Todo List */
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-unit);
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--background-color);
+            padding: var(--spacing-unit) var(--spacing-md);
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px var(--shadow-color);
+            transition: background-color var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .todo-item.completed {
+            opacity: 0.7;
+            text-decoration: line-through;
+            background-color: var(--secondary-color);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .todo-item input[type="checkbox"] {
+            margin-right: var(--spacing-md);
+            width: 1.25em; /* Custom checkbox size */
+            height: 1.25em;
+            accent-color: var(--primary-color); /* Changes actual checkbox color */
+            cursor: pointer;
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+        }
+
+        .todo-item span {
+            flex-grow: 1;
+            word-break: break-word; /* Prevents long words from overflowing */
+            padding-right: var(--spacing-unit); /* Space for buttons */
+        }
+
+        .todo-item button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--accent-color);
+            font-size: var(--font-size-base);
+            padding: var(--spacing-unit);
+            border-radius: var(--border-radius-sm);
+            transition: color var(--transition-speed), background-color var(--transition-speed), transform var(--transition-speed);
+            flex-shrink: 0;
+            display: flex; /* For SVG icons */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .todo-item button svg {
+            width: 1.2em;
+            height: 1.2em;
+            fill: currentColor; /* Inherit color from parent button */
+        }
+
+        .todo-item button:hover {
+            color: white;
+            background-color: var(--accent-color);
+            transform: scale(1.1);
+        }
+        
+        .todo-item button.edit-button {
+            color: var(--primary-color);
+        }
+
+        .todo-item button.edit-button:hover {
+             background-color: var(--primary-color);
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            color: var(--text-color);
+            opacity: 0.8;
+            padding: var(--spacing-lg);
+            border: 1px dashed var(--border-color);
+            border-radius: var(--border-radius-md);
+            margin-top: var(--spacing-lg);
+        }
+
+        .empty-state p {
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .empty-state svg {
+            width: 3em;
+            height: 3em;
+            fill: var(--text-color);
+            opacity: 0.6;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto; /* Pushes footer to the bottom */
+            padding-top: var(--spacing-xl);
+            text-align: center;
+            color: var(--text-color);
+            font-size: var(--font-size-small);
+            opacity: 0.8;
+            transition: color var(--transition-speed);
+        }
+
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color var(--transition-speed);
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .todo-app-container {
+                margin-top: var(--spacing-lg);
+                padding: var(--spacing-md);
+                border-radius: var(--border-radius-md);
+            }
+
+            h1 {
+                font-size: 1.25rem;
+                margin-bottom: var(--spacing-lg);
+            }
+
+            h1 svg {
+                width: 1.25em;
+                height: 1.25em;
+            }
+
+            .input-section {
+                flex-direction: column;
+                gap: var(--spacing-unit);
+            }
+
+            .input-section button {
+                width: 100%;
+            }
+
+            .todo-item {
+                flex-wrap: wrap; /* Allows buttons to wrap if space is tight */
+                gap: var(--spacing-unit);
+            }
+
+            .todo-item span {
+                flex-basis: calc(100% - 2.5em - var(--spacing-md)); /* Adjust for checkbox and padding */
+            }
+            .todo-item .button-group {
+                display: flex;
+                gap: var(--spacing-unit);
+                margin-left: auto; /* Pushes buttons to the right */
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <main id="main-content" class="todo-app-container">
+        <h1 role="heading" aria-level="1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <title>Checkmark Circle</title>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 8l-8 8z"/>
+            </svg>
+            Simple Todo App
+        </h1>
+
+        <section class="input-section">
+            <label for="newTodoInput" class="visually-hidden">New Todo Item</label>
+            <input type="text" id="newTodoInput" placeholder="Add a new task..." aria-label="Add a new todo item">
+            <button id="addTodoButton" aria-label="Add todo item">Add Task</button>
+        </section>
+
+        <section id="todoListSection">
+            <h2 class="visually-hidden" aria-level="2">Your Todo List</h2>
+            <ul id="todoList" class="todo-list" aria-live="polite" aria-atomic="true">
+                <!-- Todo items will be inserted here by JavaScript -->
+            </ul>
+            <div id="emptyState" class="empty-state" role="status" aria-relevant="additions removals" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <title>Clipboard with Checkmark</title>
+                    <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0a1 1 0 0 1 1 1h-2a1 1 0 0 1 1-1zm0 15.5l-3.5-3.5 1.41-1.41L12 16.67l5.09-5.09 1.41 1.41-6.5 6.5z"/>
+                </svg>
+                <p>No tasks yet!</p>
+                <p>Start by adding a new one above.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; <span id="currentYear"></span> Simple Todo App. All rights reserved.</p>
+        <p>Built with <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank" rel="noopener noreferrer">HTML</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank" rel="noopener noreferrer">CSS</a>, and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">JavaScript</a>.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const newTodoInput = document.getElementById('newTodoInput');
+            const addTodoButton = document.getElementById('addTodoButton');
+            const todoList = document.getElementById('todoList');
+            const emptyState = document.getElementById('emptyState');
+
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+            let todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+            function saveTodos() {
+                localStorage.setItem('todos', JSON.stringify(todos));
+            }
+
+            function renderTodos() {
+                todoList.innerHTML = ''; // Clear existing list
+                if (todos.length === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                    todos.forEach((todo, index) => {
+                        const listItem = document.createElement('li');
+                        listItem.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                        listItem.setAttribute('data-id', todo.id);
+
+                        listItem.innerHTML = `
+                            <input type="checkbox" id="todo-${todo.id}" ${todo.completed ? 'checked' : ''} aria-label="Mark task '${todo.text}' as completed">
+                            <span contenteditable="${todo.editing ? 'true' : 'false'}" 
+                                  aria-label="${todo.text}, ${todo.completed ? 'completed' : 'not completed'}" 
+                                  role="${todo.editing ? 'textbox' : 'text'}" 
+                                  tabindex="${todo.editing ? '0' : '-1'}">${todo.text}</span>
+                            <div class="button-group">
+                                <button class="edit-button" aria-label="${todo.editing ? 'Save task' : 'Edit task'}">
+                                    ${todo.editing ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Save</title><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Edit</title><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0L15.45 4.58l3.75 3.75 1.51-1.5z"/></svg>'}
+                                </button>
+                                <button class="delete-button" aria-label="Delete task '${todo.text}'">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Delete</title><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                </button>
+                            </div>
+                        `;
+                        todoList.appendChild(listItem);
+                    });
+                }
+            }
+
+            function addTodo() {
+                const text = newTodoInput.value.trim();
+                if (text) {
+                    const newTodo = {
+                        id: Date.now().toString(), // Unique ID
+                        text: text,
+                        completed: false,
+                        editing: false
+                    };
+                    todos.push(newTodo);
+                    newTodoInput.value = '';
+                    saveTodos();
+                    renderTodos();
+                    newTodoInput.focus(); // Keep focus for quick adding
+                }
+            }
+
+            function toggleTodo(id) {
+                todos = todos.map(todo =>
+                    todo.id === id ? { ...todo, completed: !todo.completed } : todo
+                );
+                saveTodos();
+                renderTodos();
+            }
+
+            function deleteTodo(id) {
+                todos = todos.filter(todo => todo.id !== id);
+                saveTodos();
+                renderTodos();
+            }
+
+            function editTodo(id) {
+                todos = todos.map(todo =>
+                    todo.id === id ? { ...todo, editing: !todo.editing } : todo
+                );
+                saveTodos();
+                renderTodos();
+                // After re-rendering, find the correct span and focus it
+                if (todos.find(todo => todo.id === id)?.editing) {
+                    const editedSpan = todoList.querySelector(`[data-id="${id}"] span[contenteditable="true"]`);
+                    if (editedSpan) {
+                         editedSpan.focus();
+                         // Place cursor at the end
+                         const range = document.createRange();
+                         const selection = window.getSelection();
+                         range.selectNodeContents(editedSpan);
+                         range.collapse(false); // Collapse to the end
+                         selection.removeAllRanges();
+                         selection.addRange(range);
+                    }
+                }
+            }
+
+            function saveEditedTodo(id, newText) {
+                todos = todos.map(todo =>
+                    todo.id === id ? { ...todo, text: newText.trim(), editing: false } : todo
+                );
+                saveTodos();
+                renderTodos();
+            }
+
+            // Event Listeners
+            addTodoButton.addEventListener('click', addTodo);
+
+            newTodoInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTodo();
+                }
+            });
+
+            todoList.addEventListener('click', (e) => {
+                const target = e.target;
+                const listItem = target.closest('.todo-item');
+                if (!listItem) return;
+
+                const id = listItem.dataset.id;
+
+                if (target.type === 'checkbox') {
+                    toggleTodo(id);
+                } else if (target.closest('.delete-button')) {
+                    deleteTodo(id);
+                } else if (target.closest('.edit-button')) {
+                    const todo = todos.find(t => t.id === id);
+                    if (todo && todo.editing) {
+                        const span = listItem.querySelector('span');
+                        saveEditedTodo(id, span.textContent);
+                    } else {
+                        editTodo(id);
+                    }
+                }
+            });
+
+            todoList.addEventListener('focusout', (e) => {
+                const span = e.target.closest('span[contenteditable="true"]');
+                if (span) {
+                    const id = e.target.closest('.todo-item').dataset.id;
+                    const todo = todos.find(t => t.id === id);
+                    if (todo && todo.editing) {
+                        // If focus moves out of the span while editing, save it
+                        saveEditedTodo(id, span.textContent);
+                    }
+                }
+            });
+
+            todoList.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && e.target.closest('span[contenteditable="true"]')) {
+                    e.preventDefault(); // Prevent new line in contenteditable
+                    const span = e.target;
+                    const id = span.closest('.todo-item').dataset.id;
+                    saveEditedTodo(id, span.textContent);
+                }
+            });
+
+            // Initial render
+            renderTodos();
+        });
+    </script>
+</body>
+</html>
